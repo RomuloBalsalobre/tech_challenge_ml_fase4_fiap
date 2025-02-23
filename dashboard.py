@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 def obter_dados_brent():
     brent = yf.download('BZ=F', start="2007-01-01", end="2025-02-10")
     brent.reset_index(inplace=True)
+    brent.columns = ['Date','Close', 'High', 'Low', 'Open', 'Volume']
     return brent
 
 # Função para exibir o dashboard
@@ -29,46 +30,59 @@ def exibir_dashboard():
 
     # Cards de Indicadores Principais
     col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        st.metric("Máximo Abertura", f"${df_filtrado['Open'].max():.2f}")
+        max_open = df_filtrado['Open'].max()
+        st.metric("Máximo Abertura", f"${float(max_open):.2f}")
     with col2:
-        st.metric("Mínimo Abertura", f"${df_filtrado['Open'].min():.2f}")
+        min_open = df_filtrado['Open'].min()
+        st.metric("Mínimo Abertura", f"${float(min_open):.2f}")
     with col3:
-        st.metric("Máximo Fechamento", f"${df_filtrado['Close'].max():.2f}")
+        max_close = df_filtrado['Close'].max()
+        st.metric("Máximo Fechamento", f"${float(max_close):.2f}")
     with col4:
-        st.metric("Mínimo Fechamento", f"${df_filtrado['Close'].min():.2f}")
-
+        min_close = df_filtrado['Close'].min()
+        st.metric("Mínimo Fechamento", f"${float(min_close):.2f}")
     # Gráfico de Candlestick com Preço de Abertura, Fechamento, Máxima e Mínima
-    fig_candlestick = go.Figure()
 
-    fig_candlestick.add_trace(go.Candlestick(
-        x=df_filtrado['Date'],
-        open=df_filtrado['Open'],
-        high=df_filtrado['High'],
-        low=df_filtrado['Low'],
-        close=df_filtrado['Close'],
-        name="Candlestick",
-        increasing_line_color='green',
-        decreasing_line_color='red'
-    ))
+    
 
-    fig_candlestick.update_layout(
-        title='Gráfico Candlestick - Preço do Brent',
-        xaxis_title='Data',
-        yaxis_title='Preço (USD)',
-        template='plotly_dark',
-        width=1000,  # Largura personalizada (em pixels)
-        height=500
-    )
+    if not df_filtrado.empty:
+        required_columns = ['Date', 'Open', 'High', 'Low', 'Close']
+        if all(col in df_filtrado.columns for col in required_columns):
+            fig_candlestick = go.Figure()
 
-    # Exibindo o gráfico de Candlestick
-    st.plotly_chart(fig_candlestick)
+            fig_candlestick.add_trace(go.Candlestick(
+                x=df_filtrado['Date'],
+                open=df_filtrado['Open'],
+                high=df_filtrado['High'],
+                low=df_filtrado['Low'],
+                close=df_filtrado['Close'],
+                name="Candlestick",
+                increasing_line_color='green',
+                decreasing_line_color='red'
+            ))
+
+            fig_candlestick.update_layout(
+                title='Gráfico Candlestick - Preço do Brent',
+                xaxis_title='Data',
+                yaxis_title='Preço (USD)',
+                template='plotly_dark',
+                width=1000,
+                height=500
+            )
+
+            st.plotly_chart(fig_candlestick)
+        else:
+            st.error("Dados necessários para o gráfico de Candlestick não encontrados.")
+    else:
+        st.warning("Nenhum dado encontrado para o período selecionado.")
 
     # Gráfico de Linhas com Preço de Abertura e Fechamento
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=df_filtrado['Date'], y=df_filtrado['Open'], mode='lines', name='Abertura', line=dict(color='#4f81bd')))
-    fig.add_trace(go.Scatter(x=df_filtrado['Date'], y=df_filtrado['Close'], mode='lines', name='Fechamento', line=dict(color='#6baed6')))
+    fig.add_trace(go.Scatter(x=df_filtrado['Date'], y=df_filtrado['Open'].values, mode='lines', name='Abertura', line=dict(color='#4f81bd')))
+    fig.add_trace(go.Scatter(x=df_filtrado['Date'], y=df_filtrado['Close'].values, mode='lines', name='Fechamento', line=dict(color='#6baed6')))
 
     fig.update_layout(
         title='Preço do Brent (Abertura e Fechamento)',
@@ -124,7 +138,6 @@ def exibir_dashboard():
         {"data": "2022-02-01", "evento": "Guerra da Ucrânia"},
         {"data": "2023-10-07", "evento": "Conflito Israel-Palestina"}
     ]
-
 
     fig_eventos = go.Figure()
 

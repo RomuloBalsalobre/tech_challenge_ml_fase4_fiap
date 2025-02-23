@@ -4,7 +4,7 @@ from previsao import exibir_previsao
 
 # Função para exibir a página
 def exibir_pagina():
-    # Criando os botões na barra lateral
+    # Criando oss botões na barra lateral
     pagina_selecionada = st.sidebar.radio(
         "Escolha uma página", 
         ["Dashboard :bar_chart:", "Previsão :chart_with_upwards_trend:"]
